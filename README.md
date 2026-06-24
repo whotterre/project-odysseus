@@ -1,9 +1,11 @@
-# Findtree - A Distributed Model for Solving the Missing Phone Problem
+# Findtree - A Distributed Model for Solving the Stolen Phone Problem
 A localized tracking backend designed to help locate lost or stolen phones on a university campus without relying on constant internet access.
 Now I wanted to use Go and the encoding/binary but let's try gRPC.
 I got inspired by the Bitcoin project on the Networking chapter of Mastering Bitcoin Chapter 2.
 It's also my first gRPC project (nyehehehe) :)
 
+
+[Sys design diagram in the works](https://excalidraw.com/#json=rgdIFvDsXgSepeg6JmWYJ,dnrGIJfXIVV7SoXtiRuw7Q)
 ## The Problem
 Commercial tracking networks (like Apple's Find My) assume everyone has unmetered cellular data, constant power, and omnipresent OS coverage. In a Nigerian university context, students turn off mobile data to save data bundles, school Wi-Fi is unreliable, and constant background GPS tracking kills phone batteries that can't easily be recharged during power outages.
 
