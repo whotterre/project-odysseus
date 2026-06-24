@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 	"github.com/whotterre/odysseus/src/internal/config"
 	"github.com/whotterre/odysseus/src/internal/initializers"
 	"github.com/whotterre/odysseus/src/internal/models"
@@ -17,6 +18,8 @@ import (
 
 func main() {
 	app := gin.Default()
+
+	app.Use(cors.Default()) // TODO: Change me 
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
