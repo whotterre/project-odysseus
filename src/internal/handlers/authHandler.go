@@ -2,13 +2,16 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/whotterre/odysseus/src/internal/services"
 )
 
 type AuthHandler struct {
 	authService services.AuthService
+	jwtSecret   string
 }
 
 type SignupUserRequest struct {
@@ -24,9 +27,10 @@ type LoginUserRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func NewAuthHandler(authService services.AuthService) *AuthHandler {
+func NewAuthHandler(authService services.AuthService, jwtSecret string) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
+		jwtSecret:   jwtSecret,
 	}
 }
 
@@ -43,10 +47,30 @@ func (h *AuthHandler) LoginUser(ctx *gin.Context) {
 		return
 	}
 
+	if h.jwtSecret == "" {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "JWT secret is not configured"})
+		return
+	}
+
+	expiresAt := time.Now().Add(24 * time.Hour)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID.String(),
+		"email":   user.Email,
+		"iat":     time.Now().Unix(),
+		"exp":     expiresAt.Unix(),
+	})
+
+	signedToken, err := token.SignedString([]byte(h.jwtSecret))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sign token"})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
+		"token":                         signedToken,
 		"account_public_key":            user.AccountPublicKey,
 		"encrypted_account_private_key": user.EncryptedAccountPrivateKey,
-		"device_public_key":            user.DevicePublicKey,
+		"device_public_key":             user.DevicePublicKey,
 	})
 }
 
@@ -58,10 +82,10 @@ func (h *AuthHandler) SignupUser(ctx *gin.Context) {
 	}
 
 	id, err := h.authService.RegisterUser(
-		req.Email, 
-		req.Password, 
-		req.AccountPublicKey, 
-		req.EncryptedAccountPrivateKey, 
+		req.Email,
+		req.Password,
+		req.AccountPublicKey,
+		req.EncryptedAccountPrivateKey,
 		req.DevicePublicKey,
 	)
 	if err != nil {

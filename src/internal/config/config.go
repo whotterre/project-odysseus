@@ -14,6 +14,7 @@ type Config struct {
 	Server      ServerConfig `mapstructure:"server"`
 	Redis       RedisConfig  `mapstructure:"redis"`
 	DatabaseURL string       `mapstructure:"DATABASE_URL"`
+	JWTSecret   string       `mapstructure:"JWT_SECRET"`
 }
 
 type ServerConfig struct {
