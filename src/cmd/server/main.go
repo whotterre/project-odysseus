@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -10,12 +11,19 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	"github.com/whotterre/odysseus/src/internal/config"
 	"github.com/whotterre/odysseus/src/internal/initializers"
+	"github.com/whotterre/odysseus/src/internal/mesh"
 	"github.com/whotterre/odysseus/src/internal/models"
 	"github.com/whotterre/odysseus/src/internal/routes"
+
+	pb "github.com/whotterre/odysseus/src/internal/grpc/proto"
 )
 
+// meshServer implements the generated gRPC server interface.
 func main() {
 	app := gin.Default()
 
@@ -58,13 +66,37 @@ func main() {
 		}
 	}()
 
+	// Setup gRPC Server 
+	conn, err := net.Listen("tcp", "0.0.0.0:" + cfg.Server.GRPCPort)
+	if err != nil {
+		log.Fatalf("Failed to listen for gRPC: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	meshServer := mesh.NewMeshServer()
+
+	// Register the Mesh Server logic
+	pb.RegisterMeshTelemetryServer(grpcServer, meshServer)
+	reflection.Register(grpcServer)
+	
+	go func() {
+		log.Printf("gRPC server listening on %s", conn.Addr().String())
+		if err := grpcServer.Serve(conn); err != nil {
+			log.Fatalf("gRPC server failed: %s", err.Error())
+		}
+	}()
+
 	<-ctx.Done()
 	stop()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	log.Println("Shutting down HTTP server")
+	log.Println("Shutting down servers...")
+
+	grpcServer.GracefulStop()
+	log.Println("gRPC server stopped")
+
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("HTTP server shutdown failed: %s", err.Error())
 	}
