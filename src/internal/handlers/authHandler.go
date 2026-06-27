@@ -20,6 +20,7 @@ type SignupUserRequest struct {
 	AccountPublicKey           string `json:"account_public_key" binding:"required"`
 	EncryptedAccountPrivateKey string `json:"encrypted_account_private_key" binding:"required"`
 	DevicePublicKey            string `json:"device_public_key" binding:"required"`
+	PasswordSalt               string `json:"password_salt"`
 }
 
 type LoginUserRequest struct {
@@ -52,7 +53,7 @@ func (h *AuthHandler) LoginUser(ctx *gin.Context) {
 		return
 	}
 
-	expiresAt := time.Now().Add(24 * time.Hour)
+	expiresAt := time.Now().Add(1 * time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID.String(),
 		"email":   user.Email,
@@ -71,6 +72,7 @@ func (h *AuthHandler) LoginUser(ctx *gin.Context) {
 		"account_public_key":            user.AccountPublicKey,
 		"encrypted_account_private_key": user.EncryptedAccountPrivateKey,
 		"device_public_key":             user.DevicePublicKey,
+		"password_salt":                 user.PasswordSalt,
 	})
 }
 

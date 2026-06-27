@@ -14,7 +14,7 @@ type User struct {
 	AccountPublicKey           string         `gorm:"not null"`
 	EncryptedAccountPrivateKey string         `gorm:"type:text;not null"`
 	DevicePublicKey            string         `gorm:"not null"`
-	
+	PasswordSalt               string         `gorm:"type:text;not null"`
 	CreatedAt                  time.Time
 	UpdatedAt                  time.Time
 	DeletedAt                  gorm.DeletedAt `gorm:"index"`

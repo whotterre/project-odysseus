@@ -31,7 +31,15 @@ func main() {
 	}
 
 	if err := db.AutoMigrate(&models.User{}); err != nil {
-		log.Printf("Failed to migrate models to db because %s", err.Error())
+		log.Fatalf("Failed to migrate models to db because %s", err.Error())
+	}
+
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)").Error; err != nil {
+		log.Printf("Warning: Failed to create email index: %s", err.Error())
+	}
+
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_users_email_deleted_at ON users(email, deleted_at)").Error; err != nil {
+		log.Printf("Warning: Failed to create composite index: %s", err.Error())
 	}
 	routes.SetupRoutes(app, db, cfg)
 

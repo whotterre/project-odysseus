@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/whotterre/odysseus/src/internal/crypto"
 	"github.com/whotterre/odysseus/src/internal/models"
 	"github.com/whotterre/odysseus/src/internal/repositories"
@@ -36,7 +37,7 @@ func (s *authService) AuthenticateUser(email, password string) (*models.User, er
 	if !crypto.CheckPasswordHash(password, user.PasswordHash) {
 		return nil, errors.New("invalid email or password")
 	}
-
+	user.PasswordSalt = uuid.New().String()
 	return user, nil
 }
 
